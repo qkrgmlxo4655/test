@@ -7,18 +7,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "runway-app.fullname" $ctx }}
+  name: {{ include "test.fullname" $ctx }}
   labels:
-    {{- include "runway-app.labels" $ctx | nindent 4 }}
+    {{- include "test.labels" $ctx | nindent 4 }}
 spec:
   replicas: {{ $c.replicaCount | default 1 }}
   selector:
     matchLabels:
-      {{- include "runway-app.selectorLabels" $ctx | nindent 6 }}
+      {{- include "test.selectorLabels" $ctx | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "runway-app.selectorLabels" $ctx | nindent 8 }}
+        {{- include "test.selectorLabels" $ctx | nindent 8 }}
     spec:
       {{- with $root.Values.global.imagePullSecrets }}
       imagePullSecrets:
@@ -42,13 +42,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "runway-app.fullname" $ctx }}
+  name: {{ include "test.fullname" $ctx }}
   labels:
-    {{- include "runway-app.labels" $ctx | nindent 4 }}
+    {{- include "test.labels" $ctx | nindent 4 }}
 spec:
   type: ClusterIP
   selector:
-    {{- include "runway-app.selectorLabels" $ctx | nindent 4 }}
+    {{- include "test.selectorLabels" $ctx | nindent 4 }}
   ports:
     - name: http
       port: {{ $c.service.port | default 80 }}

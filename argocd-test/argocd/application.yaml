@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: runway-dev
+  name: test
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -17,7 +17,7 @@ spec:
         - values-dev.yaml   # chart/values.yaml(기본값) 위에 덮어씀
   destination:
     server: https://kubernetes.default.svc
-    namespace: dev
+    namespace: test
   syncPolicy:
     automated:
       prune: true

@@ -9,8 +9,8 @@ CLUSTER  := argocd-test
 API_PORT := 6552
 UI_PORT  := 8090
 APP_PORT := 8082
-APP      := runway-dev
-NS       := dev
+APP      := test
+NS       := test
 
 .PHONY: help
 help: ## 사용 가능한 명령 목록
@@ -41,7 +41,7 @@ import-images: ## 로컬 api-server/worker/frontend 이미지를 dev 태그로 k
 	k3d image import api-server:base-1.3.0 worker:base-1.3.0 frontend:1.3.0-dev -c $(CLUSTER)
 
 .PHONY: app
-app: ## runway-dev Application 등록 (chart/ + values-dev.yaml 로 배포)
+app: ## test Application 등록 (chart/ + values-dev.yaml 로 배포)
 	kubectl apply -f argocd/application.yaml
 	@echo ">> 등록 완료. 상태: kubectl -n argocd get applications"
 

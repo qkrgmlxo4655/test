@@ -74,7 +74,7 @@ api: { image: { tag: base-1.3.0 } }
 make cluster        # k3d 클러스터 생성 (이미 있으면 skip)
 make argocd         # ArgoCD 설치 (idempotent)
 make import-images  # 로컬 이미지를 dev 태그로 k3d 에 로드
-make app            # runway-dev Application 등록 -> 자동 배포
+make app            # test Application 등록 -> 자동 배포
 make status         # 상태 확인
 make test           # frontend 에 curl
 ```
@@ -91,7 +91,7 @@ make test           # frontend 에 curl
 make ui   # https://localhost:8090 (id: admin, 비밀번호 자동 출력)
 ```
 
-`runway-dev` 앱을 클릭하면 api/worker/frontend 리소스 트리와 상태가 보입니다.
+`test` 앱을 클릭하면 api/worker/frontend 리소스 트리와 상태가 보입니다.
 
 ---
 
@@ -106,7 +106,7 @@ make status
 
 `selfHeal` 확인:
 ```bash
-kubectl -n dev scale deploy/runway-dev-frontend --replicas=3
+kubectl -n test scale deploy/test-frontend --replicas=3
 # ArgoCD 가 git 기준(1)으로 되돌립니다.
 ```
 
@@ -119,7 +119,7 @@ kubectl -n dev scale deploy/runway-dev-frontend --replicas=3
 | `make cluster`       | k3d 클러스터 생성 (있으면 skip) |
 | `make argocd`        | ArgoCD 설치 |
 | `make import-images` | 로컬 이미지를 dev 태그로 k3d 에 로드 |
-| `make app`           | runway-dev Application 등록 |
+| `make app`           | test Application 등록 |
 | `make status`        | 상태 확인 |
 | `make test`          | frontend 에 curl |
 | `make ui`            | UI 포트포워딩 + 비밀번호 |

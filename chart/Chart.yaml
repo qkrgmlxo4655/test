@@ -1,5 +1,5 @@
 apiVersion: v2
-name: runway-app
+name: test
 description: api / worker / frontend 3개 컴포넌트를 배포하는 테스트용 Helm 차트
 type: application
 version: 0.1.0
