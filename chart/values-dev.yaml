@@ -1,0 +1,11 @@
+api:
+  image:
+    tag: base-1.3.0
+
+worker:
+  image:
+    tag: base-1.3.0
+
+frontend:
+  image:
+    tag: 1.3.0-dev

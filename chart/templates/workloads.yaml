@@ -1,0 +1,57 @@
+{{- /* api / worker / frontend 세 컴포넌트를 동일한 틀로 렌더링 */ -}}
+{{- $root := . -}}
+{{- $components := dict "api" .Values.api "worker" .Values.worker "frontend" .Values.frontend -}}
+{{- range $name, $c := $components }}
+{{- $ctx := dict "component" $name "Release" $root.Release "Chart" $root.Chart -}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "runway-app.fullname" $ctx }}
+  labels:
+    {{- include "runway-app.labels" $ctx | nindent 4 }}
+spec:
+  replicas: {{ $c.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "runway-app.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "runway-app.selectorLabels" $ctx | nindent 8 }}
+    spec:
+      {{- with $root.Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: "{{ $c.image.repository }}:{{ $c.image.tag | default "latest" }}"
+          imagePullPolicy: {{ $root.Values.global.imagePullPolicy }}
+          {{- if gt (int ($c.containerPort | default 0)) 0 }}
+          ports:
+            - name: http
+              containerPort: {{ $c.containerPort }}
+          {{- end }}
+          {{- with $c.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- if and $c.service $c.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "runway-app.fullname" $ctx }}
+  labels:
+    {{- include "runway-app.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "runway-app.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $c.service.port | default 80 }}
+      targetPort: {{ $c.containerPort | default 80 }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,47 @@
+# 기본값(base). 환경별 파일(values-dev.yaml 등)이 이 위에 덮어씁니다.
+# values-dev.yaml 은 image.tag 만 오버라이드하고, repository 등 나머지는 여기서 옵니다.
+
+# 모든 컴포넌트 공통 기본값
+global:
+  imagePullPolicy: IfNotPresent
+  # 사설 레지스트리에서 받을 경우 pull secret 이름을 넣으세요. (로컬 k3d import 시 불필요)
+  imagePullSecrets: []
+
+api:
+  replicaCount: 1
+  image:
+    repository: api-server
+    tag: latest
+  containerPort: 8000
+  service:
+    enabled: true
+    port: 80
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+worker:
+  replicaCount: 1
+  image:
+    repository: worker
+    tag: latest
+  # worker 는 외부로 노출하는 포트가 없음
+  containerPort: 0
+  service:
+    enabled: false
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: frontend
+    tag: latest
+  containerPort: 80
+  service:
+    enabled: true
+    port: 80
+  resources:
+    requests: { cpu: 10m, memory: 16Mi }
+    limits: { cpu: 200m, memory: 128Mi }
