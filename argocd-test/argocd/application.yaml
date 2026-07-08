@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello
+  namespace: argocd
+  # ArgoCD가 앱을 삭제할 때 관련 리소스도 정리하도록 finalizer 추가
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # 이 저장소를 그대로 sync 소스로 사용한다. (변경 후 반드시 git push)
+    repoURL: https://github.com/qkrgmlxo4655/test.git
+    targetRevision: main
+    path: argocd-test/apps/hello
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hello
+  syncPolicy:
+    automated:
+      prune: true      # git에서 지운 리소스는 클러스터에서도 삭제
+      selfHeal: true   # 클러스터에서 직접 바꾼 값을 git 기준으로 되돌림
+    syncOptions:
+      - CreateNamespace=true
