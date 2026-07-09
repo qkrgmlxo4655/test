@@ -54,7 +54,7 @@ permissions:
 
 jobs:
   vars:
-    runs-on: ${{ vars.RUNNER_LABEL_AMD }}
+    runs-on: ubuntu-latest
     outputs:
       tag:  ${{ steps.vars.outputs.tag }}
     steps:
