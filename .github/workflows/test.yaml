@@ -54,9 +54,22 @@ permissions:
 
 jobs:
   vars:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNNER_LABEL_AMD }}
     outputs:
-      tag:      ${{ steps.vars.outputs.tag }}
+      tag:  ${{ steps.vars.outputs.tag }}
+    steps:
+      - name: Set build variables
+        id: vars
+        shell: bash
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          if [ -z "$IMAGE_TAG" ]; then
+            TAG="${GITHUB_SHA:0:7}"
+          else
+            TAG="$IMAGE_TAG"
+          fi
+          echo "tag=$TAG"                                >> "$GITHUB_OUTPUT"
 
   # [AID-1661] manifest 생성 후 deploy 옵션에 따라 dev Helm chart를 Harbor에 publish
   publish-dev-chart:
