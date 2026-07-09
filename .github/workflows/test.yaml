@@ -148,6 +148,6 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@noreply.github.com"
-          git add "$DEV_MANIFEST_PATH"
-          git commit -m "chore: deploy dev application $${{ inputs.tenant }}-${{ needs.vars.outputs.tag }}"
+          git add "${{ $DEV_MANIFEST_PATH }}"
+          git commit -m "chore: deploy dev application ${{ inputs.tenant }}-${{ needs.vars.outputs.tag }}"
           git push
