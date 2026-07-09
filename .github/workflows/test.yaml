@@ -50,7 +50,7 @@ on:
         default: development
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   vars:
