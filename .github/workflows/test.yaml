@@ -1,0 +1,134 @@
+name: Build / Application
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch / tag / commit SHA"
+        required: false
+        default: ""
+      image_tag:
+        description: "Docker image tag (leave empty to use commit SHA)"
+        required: false
+        default: ""
+      build_amd64:
+        description: "manifest: build amd64 image?"
+        type: boolean
+        default: true
+      build_arm64:
+        description: "manifest: build arm64 image?"
+        type: boolean
+        default: true
+      build_api:
+        description: "Build API?"
+        type: boolean
+        default: true
+      build_worker:
+        description: "Build Worker?"
+        type: boolean
+        default: true
+      build_frontend:
+        description: "Build Frontend?"
+        type: boolean
+        default: true
+
+      # [AID-1661] deploy 버튼 추가
+      deploy_dev:
+        description: "Deploy Dev Server?"
+        type: boolean
+        default: true
+      tenant:
+        description: "Which tenant"
+        required: false
+        default: "base"
+      select_stage:
+        description: "frontend build stage: dev or pro"
+        type: choice
+        options:
+          - development
+          - production
+        default: development
+
+permissions:
+  contents: read
+
+jobs:
+  # [AID-1661] manifest 생성 후 deploy 옵션에 따라 dev Helm chart를 Harbor에 publish
+  publish-dev-chart:
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up yq
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! command -v yq >/dev/null 2>&1; then
+            mkdir -p "$RUNNER_TEMP/bin"
+            curl -sSLf -o "$RUNNER_TEMP/bin/yq" \
+              https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+            chmod +x "$RUNNER_TEMP/bin/yq"
+            echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          fi
+
+      # helm metadata 수정
+      - name: Update dev chart values and metadata
+        id: chart
+        shell: bash
+        env:
+          DEV_MANIFEST_PATH: 'chart/values-dev.yaml'
+          CHART_VERSION: ${{ needs.vars.outputs.chart_version }}
+          IMAGE_TAG: ${{ inputs.tenant }}-${{ needs.vars.outputs.tag }}
+          BUILD_API: ${{ inputs.build_api }}
+          BUILD_WORKER: ${{ inputs.build_worker }}
+          BUILD_FRONTEND: ${{ inputs.build_frontend }}
+          SELECT_STAGE: ${{ inputs.select_stage }}
+        run: |
+          set -euo pipefail
+
+          if [ ! -f "$DEV_MANIFEST_PATH" ]; then
+            echo "::error::DEV_MANIFEST_PATH does not exist: $DEV_MANIFEST_PATH"
+            exit 1
+          fi
+
+          chart_dir="$(dirname "$DEV_MANIFEST_PATH")"
+          if [ ! -f "${chart_dir}/Chart.yaml" ]; then
+            echo "::error::Chart.yaml does not exist in ${chart_dir}"
+            exit 1
+          fi
+
+          if [ "$BUILD_API" != "false" ]; then
+            yq -i '.api.image.tag = strenv(IMAGE_TAG)' "$DEV_MANIFEST_PATH"
+          fi
+
+          if [ "$BUILD_WORKER" != "false" ]; then
+            yq -i '.worker.image.tag = strenv(IMAGE_TAG)' "$DEV_MANIFEST_PATH"
+          fi
+
+          if [ "$BUILD_FRONTEND" != "false" ] && [ "$SELECT_STAGE" = "development" ]; then
+            yq -i '.frontend.image.tag = strenv(IMAGE_TAG)' "$DEV_MANIFEST_PATH"
+          fi
+
+          api_tag="$(yq -r '.api.image.tag' "$DEV_MANIFEST_PATH")"
+          worker_tag="$(yq -r '.worker.image.tag' "$DEV_MANIFEST_PATH")"
+          frontend_tag="$(yq -r '.frontend.image.tag' "$DEV_MANIFEST_PATH")"
+          git diff -- "$DEV_MANIFEST_PATH"
+
+      - name: Commit dev manifest change
+        shell: bash
+        env:
+          DEV_MANIFEST_PATH: 'chart/values-dev.yaml'
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- "$DEV_MANIFEST_PATH"; then
+            echo "No dev manifest changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@noreply.github.com"
+          git add "$DEV_MANIFEST_PATH"
+          git commit -m "chore: deploy dev application $${{ inputs.tenant }}-${{ needs.vars.outputs.tag }}"
+          git push
