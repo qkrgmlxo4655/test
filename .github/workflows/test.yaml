@@ -53,6 +53,10 @@ permissions:
   contents: read
 
 jobs:
+  vars:
+    runs-on: ubuntu-latest
+    outputs:
+      tag:      ${{ steps.vars.outputs.tag }}
 
   # [AID-1661] manifest 생성 후 deploy 옵션에 따라 dev Helm chart를 Harbor에 publish
   publish-dev-chart:
