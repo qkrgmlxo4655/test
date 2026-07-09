@@ -98,7 +98,6 @@ jobs:
         shell: bash
         env:
           DEV_MANIFEST_PATH: 'chart/values-dev.yaml'
-          CHART_VERSION: ${{ needs.vars.outputs.chart_version }}
           IMAGE_TAG: ${{ inputs.tenant }}-${{ needs.vars.outputs.tag }}
           BUILD_API: ${{ inputs.build_api }}
           BUILD_WORKER: ${{ inputs.build_worker }}
